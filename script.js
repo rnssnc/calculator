@@ -25,78 +25,62 @@ const functions = {
 };
 
 function calculate(expression) {
-  expression = expression.replace(' ', '').split('');
+  const CONSTANTS = {
+    e: Math.E,
+    PI: Math.PI,
+  };
 
-  function check() {
-    return expression[0] || '';
-  }
+  // ALWAYS SORT BY PRIORITY
+  const OPERATORS = {
+    '^': (a, b) => a ** b,
+    '%': (a, b) => a % b,
+    '/': (a, b) => {
+      if (b === 0) throw new TypeError('Division by zero');
+      return a / b;
+    },
+    '*': (a, b) => a * b,
+    '-': (a, b) => a - b,
+    '+': (a, b) => a + b,
+  };
 
-  function get() {
-    return expression.shift();
-  }
+  const FUNCTIONS = {
+    sqrt: (a) => {
+      Math.sqrt(a);
+    },
+    sin: (a) => {
+      Math.sin(a);
+    },
+    cos: (a) => {
+      Math.cos(a);
+    },
+    log: (a, b) => {
+      Math.log(b) / Math.log(a);
+    },
+  };
 
-  function number() {
-    let result = get();
-    while ((check() >= '0' && check() <= '9') || check == '.') result += get();
-    return parseFloat(result);
-  }
+  const NUMBER_REGEXP = '(-?[0-9.]+)';
 
-  function str() {
-    let result = get();
-    while (check() >= 'a' && check() <= 'z') result += get();
-    return result;
-  }
-
-  function factor() {
-    if (check() >= 'a' && check() <= 'z') {
-      let text = str();
-      if (functions[text]) return functions[text](factor());
-      if (consts[text]) return consts[text];
-      if (operators[text]) {
-        let results = operators[text](factor(), factor());
-        get();
-        return results;
-      }
-      throw new Error('Parse error');
-    }
-    if (check() > '0' && check() < '9') return number();
-    if (check() == '(') {
-      get(); // (
-      let results = parse();
-      get(); // )
-      return results;
-    }
-    if (check() == '-') return -factor(get());
-  }
-
-  function term() {
-    var result = factor();
-    if (operators[check()]) {
-      return (result = operators[get()](result, factor()));
-    }
-    while (check() == '*' || check() == '/') {
-      if (get() == '*') {
-        result *= factor();
-      } else {
-        result /= factor();
+  function calc(expression) {
+    console.log('first - ' + expression);
+    for (let operator in OPERATORS) {
+      let regExp = `${NUMBER_REGEXP}\\${operator}${NUMBER_REGEXP}`;
+      let matches;
+      while ((matches = expression.match(regExp))) {
+        let [expr, a, b] = matches;
+        let result = OPERATORS[operator](+a, +b);
+        console.log(`result - ${result}`);
+        expression =
+          result == 0
+            ? expression.replace(expr, '')
+            : expression.replace(expr, result);
+        console.log(expression);
       }
     }
-    return result;
   }
 
-  function parse() {
-    var result = term();
-    while (check() == '+' || check() == '-') {
-      if (get() == '+') {
-        result += term();
-      } else {
-        result -= term();
-      }
-    }
-    return result;
-  }
-
-  return parse();
+  expression = expression.replace(/\s/g, '');
+  calc(expression);
 }
 
-console.log(calculate('log(-1*(3+5)+2^6+e,2)*10*10-sqrt(4)'));
+// console.log(calculate('log(-1*(3+5)+2^6+e,2)*10*10-sqrt(4)'));
+console.log(calculate(' 84 + 62 / 33 * 10 + 15 '));
